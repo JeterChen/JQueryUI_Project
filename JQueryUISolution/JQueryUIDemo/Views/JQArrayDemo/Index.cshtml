@@ -1,0 +1,35 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <script src="~/Scripts/jquery-1.10.1.min.js"></script>
+    <title>Index</title>
+</head>
+<body>
+    <div id="show"> 
+    </div>
+</body>
+</html>
+<script>
+    $(document).ready(function () {
+        var collections = [["123", "456", "789"], ["999", "888", "777"]];
+        var len = collections.length;
+        for (var i = 0; i < len; i++) {
+            for (var j = 0; j < collections[i].length; j++) {
+                var citem = collections[i];
+                var el = document.querySelector("#show");
+
+                var pel = document.createElement('p');
+                pel.textContent = citem[j];
+                el.appendChild(pel);
+                
+            }
+        }
+    });
+</script>

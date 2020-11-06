@@ -12,7 +12,8 @@
     <title>Index</title>
 </head>
 <body>
-    <div id="show"> 
+    <div id="show">
+        <ul id="uu"></ul>
     </div>
 </body>
 </html>
@@ -24,12 +25,18 @@
             for (var j = 0; j < collections[i].length; j++) {
                 var citem = collections[i];
                 var el = document.querySelector("#show");
-
-                var pel = document.createElement('p');
-                pel.textContent = citem[j];
-                el.appendChild(pel);
-                
+                var euu = document.querySelector("#uu");
+                var eli = document.createElement('li');
+                eli.textContent = citem[j];
+                eli.setAttribute("id", citem[j]);
+                eli.setAttribute("onclick", "getID('" + citem[j] + "');");
+                euu.appendChild(eli);
+                el.appendChild(euu);
             }
         }
     });
+
+    function getID(Id) {
+        alert(Id);
+    }
 </script>

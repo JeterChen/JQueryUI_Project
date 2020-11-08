@@ -1,0 +1,252 @@
+﻿
+@{
+    ViewBag.Title = "jqGridFirst";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2><em>User Info List</em></h2>
+<input type="button" id="Isert" value="Insert" class="btn btn-primary" />
+<input type="button" id="Delete" value="Delete" class="btn btn-primary" />
+<div class="container" style="margin-top:20px;">
+    <table id="jqGrid1" class="table table-hover"></table>
+    <div id="pager"></div>
+</div>
+<div id="jqDialog1" title="Insert">
+    <table class="form-group">
+        <tr>
+            <td>ID:</td>
+            <td class="form-group">
+                <input type="text" id="tID" name="tID" class="form-control" readonly />
+            </td>
+        </tr>
+        <tr>
+            <td>Name:</td>
+            <td class="form-group">
+                <input type="text" id="tName" name="tName" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td>PhoneNumber:</td>
+            <td class="form-group">
+                <input type="text" id="tPhoneNumber" name="tPhoneNumber" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td>Photo:</td>
+            <td class="form-group">
+                <input type="text" id="tPhoto" name="tPhoto" class="form-control" />
+            </td>
+        </tr>
+    </table>
+</div>
+<div id="jqDialog1-confirm" title="Delete">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>
+        Are you sure to delete?
+    </p>
+</div>
+
+@section scripts {
+    <link href="~/Content/themes/base/jquery-ui.css" rel="stylesheet" />
+    <link href="~/Content/jquery.jqGrid/ui.jqgrid.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.12.1.js"></script>
+    <script src="~/Scripts/i18n/grid.locale-tw.js"></script>
+    <script src="~/Scripts/jquery.jqGrid.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            jqGrid1Loading();
+            jqDialogInit();
+        });
+
+        function jqDialogInit() {
+            var jqDialog1, jqDialog1_Delete
+            jqDialog1 = $("#jqDialog1").dialog({
+                autoOpen: false,
+                resizable: false,
+                height: 300,
+                width: 400,
+                modal: true,//這個就是遮罩效果
+                buttons: {
+                    Confirm: function () {
+                        jqGrid1_Dialog_btnConfirm();
+                    },
+                    Cancel: function () {
+                        $(this).dialog("close");
+                    }
+                },
+                close: function () {
+                    $("#tID").val('');
+                    $("#tName").val('');
+                    $("#tPhoneNumber").val('');
+                    $("#tPhoto").val('');
+                }
+            });
+
+          
+
+            jqDialog1_Delete = $("#jqDialog1-confirm").dialog({
+                autoOpen: false,
+                resizable: false,
+                height: 140,
+                buttons: {
+                    Confirm: function () {
+                        jqGrid1_delSelectRow();
+                    },
+                    Cancel: function () {
+                        $(this).dialog("close");
+                    }
+                }
+            });
+
+
+            //新增按鈕
+            $("#Isert").button().on("click", function () {
+                var rowkey = $("#jqGrid1").getGridParam("reccount");
+                $("#tID").val(rowkey + 1);
+                jqDialog1.dialog("option", "title", "Insert").dialog("open");
+            });
+
+            //刪除按鈕
+            $("#Delete").button().on("click", function () {
+                var id = jQuery("#jqGrid1").jqGrid('getGridParam', 'selrow');
+                if (id) {
+                    var ret = jQuery("#jqGrid1").jqGrid('getRowData', id);
+                    jqDialog1_Delete.dialog("open");
+                }
+                else {
+                    alert("Please Select Row");
+                }
+            });
+        }
+
+        function jqGrid1Loading() {
+            var dataurl = "http://localhost:58879/User.json"
+
+            $("#jqGrid1").jqGrid({
+               // url: dataurl,
+                datatype: "local",
+                //mtype: 'Get',
+                colNames: ['ID', 'Name', 'PhoneNumber', 'Photo'],
+                colModel: [
+                    { name: 'ID', width: 75 },
+                    { name: 'Name', width: 150 },
+                    { name: 'PhoneNumber', width: 150 },
+                    { name: 'Photo', width: 150 },
+                ],
+                autowidth: true,
+                height: '100%',
+                rowNum: 100,
+                pager: "#pager",
+                jsonReader:
+                {
+                    root: "rows",
+                    page: "page",
+                    total: "total",
+                    records: "records",
+                    repeatitems: false,
+                    Id: "0"
+                },
+                ondblClickRow: function (rowid) {
+                    if (rowid) {
+                        var ret = jQuery("#jqGrid1").jqGrid('getRowData', rowid);
+                        $("#tID").val(ret.ID);
+                        $("#tName").val(ret.Name);
+                        $("#tPhoneNumber").val(ret.PhoneNumber);
+                        $("#tPhoto").val(ret.Photo);
+                       
+                        $("#jqDialog1").dialog("option", "title", "Edit").dialog("open");
+
+                    } else {
+                        alert("Please select a row to edit");
+                    }
+                }
+            });
+        }
+
+        //del row
+        function jqGrid1_delSelectRow() {
+            var id = jQuery("#jqGrid1").jqGrid('getGridParam', 'selrow');
+            if (id) {
+                var ret = jQuery("#jqGrid1").jqGrid('getRowData', id);
+                var su = jQuery("#jqGrid1").jqGrid('delRowData', ret.ID);
+                jQuery("#jqGrid1").trigger("reloadGrid");
+
+                if (su) {
+                    var rowIds = jQuery("#jqGrid1").jqGrid('getDataIDs');
+                    for (var k = 0; k < rowIds.length; k++) {
+                        {
+                            var datarow = { ID: k + 1 };
+                            var su = jQuery("#jqGrid1").jqGrid('setRowData', rowIds[k], datarow);
+                        }
+                    }
+                    jQuery("#jqGrid1").trigger("reloadGrid");
+                }
+                else {
+                    alert("Error");
+                }
+                $("#jqDialog1-confirm").dialog("close");
+            }
+        }
+
+        function jqGrid1_Dialog_btnConfirm() {
+            var datarow =
+            {
+                ID: $("#tID").val(),
+                Name: $("#tName").val(),
+                PhoneNumber: $("#tPhoneNumber").val(),
+                Photo: $("#tPhoto").val(),
+            };
+
+            var validMsg = jqGrid1_Dialog_Validation(datarow);
+
+            if (validMsg.check) {
+                var status = $('#jqDialog1').dialog("option", "title");
+                var su;
+
+                if (status == "Insert") {
+                    su = jQuery("#jqGrid1").jqGrid('addRowData', $("#tID").val(), datarow);
+                }
+                else {
+                    su = jQuery("#jqGrid1").jqGrid('setRowData', $("#tID").val(), datarow);
+                }
+
+                if (su) {
+                    jQuery("#jqGrid1").trigger("reloadGrid");
+                    $("#jqDialog1").dialog("close");
+                }
+                else {
+                    alert("Error");
+                }
+            }
+            else {
+                alert("The following fields must be filled:\n" + validMsg.errMsg);
+            }
+        }
+
+        function jqGrid1_Dialog_Validation(datarow) {
+            var msg = {
+                check: true, errMsg: ""
+            };
+
+            if (datarow.Name == "") {
+                msg.check = false;
+                msg.errMsg += "\n Name";
+            }
+
+            if (datarow.PhoneNumber == "") {
+                msg.check = false;
+                msg.errMsg += "\n PhoneNumber";
+            }
+
+            if (datarow.Photo == "") {
+                msg.check = false;
+                msg.errMsg += "\n Photo";
+            }
+            return msg;
+        }
+
+    </script>
+}

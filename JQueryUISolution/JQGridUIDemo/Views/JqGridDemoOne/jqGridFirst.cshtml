@@ -123,21 +123,21 @@
         }
 
         function jqGrid1Loading() {
-            var dataurl = "http://localhost:58879/User.json"
-
+            var dataurl = "@Url.Action("GetAllUser", "JqGridDemoOne")";
             $("#jqGrid1").jqGrid({
-               // url: dataurl,
-                datatype: "local",
-                //mtype: 'Get',
+                url: dataurl,
+                datatype: "Json",
+                mtype: 'Get',
                 colNames: ['ID', 'Name', 'PhoneNumber', 'Photo'],
                 colModel: [
-                    { name: 'ID', width: 75 },
+                    { name: 'Id', width: 75 },
                     { name: 'Name', width: 150 },
                     { name: 'PhoneNumber', width: 150 },
                     { name: 'Photo', width: 150 },
                 ],
                 autowidth: true,
                 height: '100%',
+                viewrecords: true,
                 rowNum: 100,
                 pager: "#pager",
                 jsonReader:
@@ -152,7 +152,7 @@
                 ondblClickRow: function (rowid) {
                     if (rowid) {
                         var ret = jQuery("#jqGrid1").jqGrid('getRowData', rowid);
-                        $("#tID").val(ret.ID);
+                        $("#tID").val(ret.Id);
                         $("#tName").val(ret.Name);
                         $("#tPhoneNumber").val(ret.PhoneNumber);
                         $("#tPhoto").val(ret.Photo);
@@ -171,14 +171,27 @@
             var id = jQuery("#jqGrid1").jqGrid('getGridParam', 'selrow');
             if (id) {
                 var ret = jQuery("#jqGrid1").jqGrid('getRowData', id);
-                var su = jQuery("#jqGrid1").jqGrid('delRowData', ret.ID);
-                jQuery("#jqGrid1").trigger("reloadGrid");
+                var su = jQuery("#jqGrid1").jqGrid('delRowData', ret.Id);
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("RemoveUser", "JqGridDemoOne")",
+                    data: { Id: ret.Id },
+                    dataType: "json",
+                    success: function (result) {
+                        if (result.Msg == "" || result.Msg == null) {
+                            jQuery("#jqGrid1").trigger("reloadGrid");
+                        } else {
+                            alert(result.Msg);
+                        }
+                    }
+                });
+               
 
                 if (su) {
                     var rowIds = jQuery("#jqGrid1").jqGrid('getDataIDs');
                     for (var k = 0; k < rowIds.length; k++) {
                         {
-                            var datarow = { ID: k + 1 };
+                            var datarow = { Id: k + 1 };
                             var su = jQuery("#jqGrid1").jqGrid('setRowData', rowIds[k], datarow);
                         }
                     }
@@ -194,7 +207,7 @@
         function jqGrid1_Dialog_btnConfirm() {
             var datarow =
             {
-                ID: $("#tID").val(),
+                Id: $("#tID").val(),
                 Name: $("#tName").val(),
                 PhoneNumber: $("#tPhoneNumber").val(),
                 Photo: $("#tPhoto").val(),
@@ -208,17 +221,37 @@
 
                 if (status == "Insert") {
                     su = jQuery("#jqGrid1").jqGrid('addRowData', $("#tID").val(), datarow);
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("InserUser", "JqGridDemoOne")",
+                        data: datarow,
+                        dataType: "json",
+                        success: function (result) {
+                            if (result.Msg == "" || result.Msg == null) {
+                                jQuery("#jqGrid1").trigger("reloadGrid");
+                                $("#jqDialog1").dialog("close");
+                            } else {
+                                alert(result.Msg);
+                            }
+                        }
+                    });
                 }
                 else {
                     su = jQuery("#jqGrid1").jqGrid('setRowData', $("#tID").val(), datarow);
-                }
-
-                if (su) {
-                    jQuery("#jqGrid1").trigger("reloadGrid");
-                    $("#jqDialog1").dialog("close");
-                }
-                else {
-                    alert("Error");
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("ModifyUser", "JqGridDemoOne")",
+                        data: datarow,
+                        dataType: "json",
+                        success: function (result) {
+                            if (result.Msg == "" || result.Msg == null) {
+                                jQuery("#jqGrid1").trigger("reloadGrid");
+                                $("#jqDialog1").dialog("close");
+                            } else {
+                                alert(result.Msg);
+                            }
+                        }
+                    });
                 }
             }
             else {
